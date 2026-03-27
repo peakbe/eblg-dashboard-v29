@@ -276,10 +276,10 @@ function computeImpacted(runwayName, phase) {
     }
   });
 
+   sonometers[id].status = status; // "ok", "impact", "neutral"
+
   return impacted;
 }
-
-
 
 
 /* ----------------------------------------------------------
@@ -309,6 +309,24 @@ function limitNextFlights(list) {
 
 fids.arrivals = limitNextFlights(fids.arrivals);
 fids.departures = limitNextFlights(fids.departures);
+
+   function renderNextFlights(arrivals, departures) {
+  const container = document.getElementById("next-flights");
+
+  let html = "<strong>Arrivées</strong><br>";
+  arrivals.forEach(f => {
+    html += `${f.flight} — ${new Date(f.scheduled).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}<br>`;
+  });
+
+  html += "<br><strong>Départs</strong><br>";
+  departures.forEach(f => {
+    html += `${f.flight} — ${new Date(f.scheduled).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}<br>`;
+  });
+
+  container.innerHTML = html;
+}
+
+renderNextFlights(fids.arrivals, fids.departures);
 
  /* RUNWAY */
 const rw = extractRunway(fids);
@@ -343,6 +361,8 @@ document.getElementById("runway-info").textContent =
   document.getElementById("runway-info").textContent =
     `Piste ${rw.name} (cap ${rw.heading}°)`;
 
+   window.currentRunway = rw.name;
+
   /* COULOIR + SONOMÈTRES */
   const impacted = computeImpacted(rw.name, phase);
 
@@ -356,8 +376,38 @@ document.getElementById("runway-info").textContent =
 document.getElementById("phase-select").addEventListener("change", () => {
   refresh();
 });
+
 document.getElementById("reset-map").addEventListener("click", () => {
   map.setView([50.6374, 5.4432], 12); // centre + zoom par défaut
+});
+
+document.getElementById("zoom-runway").addEventListener("click", () => {
+  if (!window.currentRunway) return;
+
+  if (window.currentRunway === "22") {
+    map.fitBounds([
+      [50.64594, 5.44375],
+      [50.65480, 5.46530]
+    ]);
+  } else {
+    map.fitBounds([
+      [50.65480, 5.46530],
+      [50.64594, 5.44375]
+    ]);
+  }
+});
+
+document.getElementById("zoom-impacted").addEventListener("click", () => {
+  const impacted = Object.values(sonometers).filter(s => s.status === "impact");
+
+  if (impacted.length === 0) return;
+
+  const bounds = L.latLngBounds(impacted.map(s => [s.lat, s.lon]));
+  map.fitBounds(bounds.pad(0.3));
+});
+
+document.getElementById("zoom-global").addEventListener("click", () => {
+  map.setView([50.6374, 5.4432], 12);
 });
 
 /* 🔧 FIX : attendre que la carte soit prête */
