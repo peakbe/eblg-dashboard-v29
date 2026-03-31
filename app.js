@@ -284,7 +284,27 @@ function updateSonometersAdvanced(runway, phase) {
         }
     });
 }
+function updateSonometersAdvanced(runway, phase) {
+    ...
+}
 
+// 👉 COLLER ICI
+function updateSonometerPanel() {
+    const container = document.getElementById("sono-list");
+    if (!container) return;
+
+    const items = Object.values(sonometers).map(s => {
+        let cls = "sono-gray";
+        if (s.marker.options.color === "green") cls = "sono-green";
+        if (s.marker.options.color === "red") cls = "sono-red";
+
+        return `<div class="sono-item ${cls}">
+                    <span>${s.id}</span>
+                </div>`;
+    });
+
+    container.innerHTML = items.join("");
+}
 
 // ======================================================
 // METAR
